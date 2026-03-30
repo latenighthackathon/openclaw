@@ -24,6 +24,18 @@ type WhatsAppChunker = NonNullable<ChannelOutboundAdapter["chunker"]>;
 type WhatsAppSendMessage = PluginRuntimeChannel["whatsapp"]["sendMessageWhatsApp"];
 type WhatsAppSendPoll = PluginRuntimeChannel["whatsapp"]["sendPollWhatsApp"];
 
+function resolveQuotedMessageKey(replyToId: string | null | undefined, to: string) {
+  const quotedId = replyToId?.trim();
+  if (!quotedId) {
+    return undefined;
+  }
+  return {
+    id: quotedId,
+    remoteJid: toWhatsappJid(to),
+    fromMe: false,
+  };
+}
+
 type CreateWhatsAppOutboundBaseParams = {
   chunker: WhatsAppChunker;
   sendMessageWhatsApp: WhatsAppSendMessage;
@@ -70,15 +82,12 @@ export function createWhatsAppOutboundBase({
         }
         const send =
           resolveOutboundSendDep<WhatsAppSendMessage>(deps, "whatsapp") ?? sendMessageWhatsApp;
-        const quotedMessageKey = replyToId?.trim()
-          ? { id: replyToId.trim(), remoteJid: toWhatsappJid(to), fromMe: false }
-          : undefined;
         return await send(to, normalizedText, {
           verbose: false,
           cfg,
           accountId: accountId ?? undefined,
           gifPlayback,
-          quotedMessageKey,
+          quotedMessageKey: resolveQuotedMessageKey(replyToId, to),
         });
       },
       sendMedia: async ({
@@ -94,9 +103,6 @@ export function createWhatsAppOutboundBase({
       }) => {
         const send =
           resolveOutboundSendDep<WhatsAppSendMessage>(deps, "whatsapp") ?? sendMessageWhatsApp;
-        const quotedMessageKey = replyToId?.trim()
-          ? { id: replyToId.trim(), remoteJid: toWhatsappJid(to), fromMe: false }
-          : undefined;
         return await send(to, normalizeText(text), {
           verbose: false,
           cfg,
@@ -104,7 +110,7 @@ export function createWhatsAppOutboundBase({
           mediaLocalRoots,
           accountId: accountId ?? undefined,
           gifPlayback,
-          quotedMessageKey,
+          quotedMessageKey: resolveQuotedMessageKey(replyToId, to),
         });
       },
       sendPoll: async ({ cfg, to, poll, accountId }) =>

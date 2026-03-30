@@ -1,14 +1,7 @@
 import { formatCliCommand } from "openclaw/plugin-sdk/cli-runtime";
 import type { PollInput } from "openclaw/plugin-sdk/media-runtime";
 import { DEFAULT_ACCOUNT_ID } from "openclaw/plugin-sdk/routing";
-
-export type QuotedMessageKey = {
-  id: string;
-  remoteJid: string;
-  fromMe: boolean;
-  participant?: string;
-  body?: string;
-};
+import type { QuotedMessageKey } from "./quoted-message.js";
 
 export type ActiveWebSendOptions = {
   gifPlayback?: boolean;

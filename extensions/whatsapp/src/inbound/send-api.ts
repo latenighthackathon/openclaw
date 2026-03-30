@@ -5,25 +5,8 @@ import type {
 } from "@whiskeysockets/baileys";
 import { recordChannelActivity } from "openclaw/plugin-sdk/channel-runtime";
 import { toWhatsappJid } from "openclaw/plugin-sdk/text-runtime";
-import type { ActiveWebSendOptions, QuotedMessageKey } from "../active-listener.js";
-
-function buildQuotedOption(
-  key: QuotedMessageKey | undefined,
-): MiscMessageGenerationOptions | undefined {
-  if (!key) {
-    return undefined;
-  }
-  const quoted = {
-    key: {
-      remoteJid: key.remoteJid,
-      id: key.id,
-      fromMe: key.fromMe,
-      participant: key.participant,
-    },
-    message: { conversation: key.body || "" },
-  };
-  return { quoted } as MiscMessageGenerationOptions;
-}
+import type { ActiveWebSendOptions } from "../active-listener.js";
+import { buildQuotedMessageOptions } from "../quoted-message.js";
 
 function recordWhatsAppOutbound(accountId: string) {
   recordChannelActivity({
@@ -89,7 +72,7 @@ export function createWebSendApi(params: {
       } else {
         payload = { text };
       }
-      const quotedOpts = buildQuotedOption(sendOptions?.quotedMessageKey);
+      const quotedOpts = buildQuotedMessageOptions(sendOptions?.quotedMessageKey);
       const result = quotedOpts
         ? await params.sock.sendMessage(jid, payload, quotedOpts)
         : await params.sock.sendMessage(jid, payload);

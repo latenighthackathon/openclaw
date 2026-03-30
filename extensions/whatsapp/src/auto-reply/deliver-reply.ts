@@ -11,6 +11,7 @@ import { convertMarkdownTables } from "openclaw/plugin-sdk/text-runtime";
 import { markdownToWhatsApp } from "openclaw/plugin-sdk/text-runtime";
 import { sleep } from "openclaw/plugin-sdk/text-runtime";
 import { loadWebMedia } from "../media.js";
+import { buildQuotedMessageKey, buildQuotedMessageOptions } from "../quoted-message.js";
 import { newConnectionId } from "../reconnect.js";
 import { formatError } from "../session.js";
 import { whatsappOutboundLog } from "./loggers.js";
@@ -86,21 +87,15 @@ export async function deliverWebReply(params: {
   // shared reply threading pipeline. The pipeline reads replyToMode from the
   // WhatsApp threading adapter and controls which payloads get replyToId.
   // Every chunk within a quoted payload is quoted.
-  const replyToId = replyResult.replyToId?.trim();
-  const quotedOptions: MiscMessageGenerationOptions | undefined =
-    replyToId && msg.chatId
-      ? ({
-          quoted: {
-            key: {
-              remoteJid: msg.chatId,
-              id: replyToId,
-              fromMe: msg.fromMe ?? false,
-              participant: msg.senderJid ?? undefined,
-            },
-            message: { conversation: msg.body || "" },
-          },
-        } as MiscMessageGenerationOptions)
-      : undefined;
+  const quotedOptions: MiscMessageGenerationOptions | undefined = buildQuotedMessageOptions(
+    buildQuotedMessageKey({
+      replyToId: replyResult.replyToId,
+      remoteJid: msg.chatId,
+      fromMe: msg.fromMe,
+      participant: msg.senderJid,
+      body: msg.body,
+    }),
+  );
 
   // Text-only replies
   if (mediaList.length === 0 && textChunks.length) {

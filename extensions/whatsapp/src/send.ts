@@ -9,12 +9,9 @@ import { convertMarkdownTables } from "openclaw/plugin-sdk/text-runtime";
 import { markdownToWhatsApp } from "openclaw/plugin-sdk/text-runtime";
 import { toWhatsappJid } from "openclaw/plugin-sdk/text-runtime";
 import { resolveWhatsAppAccount, resolveWhatsAppMediaMaxBytes } from "./accounts.js";
-import {
-  type ActiveWebSendOptions,
-  type QuotedMessageKey,
-  requireActiveWebListener,
-} from "./active-listener.js";
+import { type ActiveWebSendOptions, requireActiveWebListener } from "./active-listener.js";
 import { loadWebMedia } from "./media.js";
+import type { QuotedMessageKey } from "./quoted-message.js";
 
 const outboundLog = createSubsystemLogger("gateway/channels/whatsapp").child("outbound");
 
