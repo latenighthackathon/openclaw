@@ -253,6 +253,51 @@ describe("whatsappPlugin outbound sendMedia", () => {
       }),
     );
   });
+
+  it("stops formatted chunk sending after abort", async () => {
+    const abortController = new AbortController();
+    const sendWhatsApp = vi.fn(
+      async (_to: string, _text: string, _options: { quotedMessageKey?: unknown }) => {
+        abortController.abort();
+        return {
+          messageId: "msg-1",
+          toJid: "15551234567@s.whatsapp.net",
+        };
+      },
+    );
+
+    const outbound = whatsappPlugin.outbound;
+    if (!outbound?.sendFormattedText) {
+      throw new Error("whatsapp outbound sendFormattedText is unavailable");
+    }
+
+    const cfg = {
+      channels: {
+        whatsapp: {
+          textChunkLimit: 3,
+        },
+      },
+    } as unknown as OpenClawConfig;
+
+    await expect(
+      outbound.sendFormattedText({
+        cfg,
+        to: "whatsapp:+15551234567",
+        text: "aaaaaa",
+        accountId: "default",
+        deps: { sendWhatsApp },
+        abortSignal: abortController.signal,
+      }),
+    ).rejects.toThrow("Operation aborted");
+
+    expect(sendWhatsApp).toHaveBeenCalledTimes(1);
+    expect(sendWhatsApp).toHaveBeenNthCalledWith(
+      1,
+      "whatsapp:+15551234567",
+      "aaa",
+      expect.any(Object),
+    );
+  });
 });
 
 describe("whatsappPlugin threading", () => {

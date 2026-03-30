@@ -4,6 +4,7 @@ import {
   resolveTextChunkLimit,
 } from "../../auto-reply/chunk.js";
 import type { OpenClawConfig } from "../../config/config.js";
+import { throwIfAborted } from "../../infra/outbound/abort.js";
 import { resolveOutboundSendDep } from "../../infra/outbound/send-deps.js";
 import {
   attachChannelToResults,
@@ -142,7 +143,17 @@ export function createWhatsAppOutboundBase({
     textChunkLimit: 4000,
     pollMaxOptions: 12,
     resolveTarget,
-    sendFormattedText: async ({ cfg, to, text, accountId, deps, gifPlayback, replyToId }) => {
+    sendFormattedText: async ({
+      cfg,
+      to,
+      text,
+      accountId,
+      deps,
+      gifPlayback,
+      replyToId,
+      abortSignal,
+    }) => {
+      throwIfAborted(abortSignal);
       const limit = resolveTextChunkLimit(cfg, "whatsapp", accountId ?? undefined, {
         fallbackLimit: 4000,
       });
@@ -156,6 +167,7 @@ export function createWhatsAppOutboundBase({
       let nextReplyToId = replyToId;
       const results: Array<Awaited<ReturnType<typeof sendTextRaw>>> = [];
       const sendChunk = async (chunk: string) => {
+        throwIfAborted(abortSignal);
         const result = await sendTextRaw({
           cfg,
           to,
