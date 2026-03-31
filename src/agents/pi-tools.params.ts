@@ -199,6 +199,33 @@ export function normalizeToolParams(params: unknown): Record<string, unknown> | 
   }
   const record = params as Record<string, unknown>;
   const normalized = { ...record };
+
+  // Some models/schemas wrap edit params inside an edits[] array.
+  // Hoist oldText/newText from edits[0] to the top level so downstream
+  // validation and normalization find them.
+  if (
+    Array.isArray(normalized.edits) &&
+    normalized.edits.length > 0 &&
+    typeof normalized.edits[0] === "object" &&
+    normalized.edits[0] !== null
+  ) {
+    const first = normalized.edits[0] as Record<string, unknown>;
+    for (const key of [
+      "oldText",
+      "old_string",
+      "old_text",
+      "oldString",
+      "newText",
+      "new_string",
+      "new_text",
+      "newString",
+    ]) {
+      if (key in first && !(key in normalized)) {
+        normalized[key] = first[key];
+      }
+    }
+  }
+
   normalizeClaudeParamAliases(normalized);
   // Some providers/models emit text payloads as structured blocks instead of raw strings.
   // Normalize these for write/edit so content matching and writes stay deterministic.
