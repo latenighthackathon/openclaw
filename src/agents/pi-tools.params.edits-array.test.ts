@@ -32,14 +32,26 @@ describe("normalizeToolParams — edits[] array hoisting", () => {
     expect(normalized!.newText).toBe("top-level-new");
   });
 
+  it("top-level aliases take precedence over nested canonical keys", () => {
+    const params = {
+      file: "test.ts",
+      old_string: "top-level",
+      new_string: "top-level-new",
+      edits: [{ oldText: "nested", newText: "nested-new" }],
+    };
+    const normalized = normalizeToolParams(params);
+    // Top-level old_string should win over nested edits[0].oldText
+    expect(normalized!.oldText).toBe("top-level");
+    expect(normalized!.newText).toBe("top-level-new");
+  });
+
   it("handles edits[] with alias keys (old_string, new_string)", () => {
     const params = {
       file: "test.ts",
       edits: [{ old_string: "hello", new_string: "world" }],
     };
     const normalized = normalizeToolParams(params);
-    // After hoisting from edits[0], normalizeClaudeParamAliases converts
-    // old_string -> oldText and new_string -> newText
+    // Alias normalization runs on edits[0] values after hoisting
     expect(normalized!.oldText).toBe("hello");
     expect(normalized!.newText).toBe("world");
   });
