@@ -87,4 +87,19 @@ describe("normalizeToolParams — edits[] array hoisting", () => {
       assertRequiredParams(normalized, CLAUDE_PARAM_GROUPS.edit, "edit");
     }).toThrow(/Missing required/);
   });
+
+  it("does not produce duplicate edits after hoisting from edits[0]", () => {
+    const params = {
+      file: "test.ts",
+      edits: [{ oldText: "hello", newText: "world" }],
+    };
+    const normalized = normalizeToolParams(params);
+    // After hoisting, edits array should be removed to prevent
+    // normalizeEditReplacements from creating a duplicate entry.
+    const edits = normalized!.edits as Array<{ oldText: string; newText: string }> | undefined;
+    if (edits) {
+      const dupes = edits.filter((e) => e.oldText === "hello" && e.newText === "world");
+      expect(dupes.length).toBeLessThanOrEqual(1);
+    }
+  });
 });

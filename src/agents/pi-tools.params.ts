@@ -229,6 +229,10 @@ export function normalizeToolParams(params: unknown): Record<string, unknown> | 
         normalized[key] = first[key];
       }
     }
+    // Remove the edits array after hoisting so normalizeEditReplacements
+    // does not produce a duplicate entry from both edits[0] and the
+    // newly-hoisted top-level keys.
+    delete normalized.edits;
     // Re-run alias normalization so hoisted alias keys (e.g. old_string
     // from edits[0]) are converted to canonical keys (oldText/newText).
     normalizeClaudeParamAliases(normalized);
