@@ -31,6 +31,18 @@ describe("system prompt cache boundary helpers", () => {
     ).toBe(`Stable prefix${SYSTEM_PROMPT_CACHE_BOUNDARY}Per-turn lab context\n\nDynamic suffix`);
   });
 
+  it("strips null bytes from prompt text", () => {
+    expect(stripSystemPromptCacheBoundary("Hello\0World\0")).toBe("HelloWorld");
+  });
+
+  it("strips null bytes alongside cache boundary markers", () => {
+    expect(
+      stripSystemPromptCacheBoundary(
+        `Stable\0 prefix${SYSTEM_PROMPT_CACHE_BOUNDARY}Dynamic\0 suffix`,
+      ),
+    ).toBe("Stable prefix\nDynamic suffix");
+  });
+
   it("normalizes structured additions and dynamic suffix whitespace", () => {
     expect(
       prependSystemPromptAdditionAfterCacheBoundary({

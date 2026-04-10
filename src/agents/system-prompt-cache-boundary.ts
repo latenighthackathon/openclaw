@@ -3,7 +3,10 @@ import { normalizeStructuredPromptSection } from "./prompt-cache-stability.js";
 export const SYSTEM_PROMPT_CACHE_BOUNDARY = "\n<!-- OPENCLAW_CACHE_BOUNDARY -->\n";
 
 export function stripSystemPromptCacheBoundary(text: string): string {
-  return text.replaceAll(SYSTEM_PROMPT_CACHE_BOUNDARY, "\n");
+  // Strip cache boundary markers and null bytes. Null bytes in system prompts
+  // (e.g. from conversation metadata in channel messages) cause Node.js
+  // child_process.spawn to throw ERR_INVALID_ARG_VALUE.
+  return text.replaceAll(SYSTEM_PROMPT_CACHE_BOUNDARY, "\n").replaceAll("\0", "");
 }
 
 export function splitSystemPromptCacheBoundary(
