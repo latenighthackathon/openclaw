@@ -104,6 +104,20 @@ describe("normalizeToolParams — edits[] array hoisting", () => {
     expect(edits[1]).toEqual({ oldText: "delta", newText: "DELTA" });
   });
 
+  it("falls back to top-level params when edits[] contains only malformed entries", () => {
+    const params = {
+      file: "test.ts",
+      oldText: "valid-top",
+      newText: "valid-top-new",
+      edits: [{}],
+    };
+    const normalized = normalizeToolParams(params);
+    expect(normalized).toBeDefined();
+    expect(normalized!.edits).toHaveLength(1);
+    const edits = normalized!.edits as Array<{ oldText: string; newText: string }>;
+    expect(edits[0]).toEqual({ oldText: "valid-top", newText: "valid-top-new" });
+  });
+
   it("does not produce duplicate edits for a single-entry edits[] payload", () => {
     const params = {
       file: "test.ts",
