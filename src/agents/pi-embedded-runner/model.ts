@@ -134,12 +134,11 @@ function normalizeResolvedModel(params: {
   runtimeHooks?: ProviderRuntimeHooks;
 }): Model<Api> {
   if (!params.model) {
-    return {
-      id: "unknown",
-      name: "unknown",
-      api: "openai-chat" as Api,
-      input: ["text"],
-    } as Model<Api>;
+    throw new Error(
+      `normalizeResolvedModel: model is ${params.model} for provider "${params.provider}". ` +
+        "This usually means a provider plugin or config-driven model resolution returned an " +
+        "unexpected result. Check the provider configuration and any custom runtime plugins.",
+    );
   }
   const normalizedInputModel = {
     ...params.model,
