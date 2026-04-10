@@ -129,6 +129,7 @@ function normalizeEditReplacement(value: unknown): EditReplacement | undefined {
 
 function normalizeEditReplacements(record: Record<string, unknown>) {
   const replacements: EditReplacement[] = [];
+  const hadEditsArray = Array.isArray(record.edits) && record.edits.length > 0;
   if (Array.isArray(record.edits)) {
     for (const entry of record.edits) {
       const normalized = normalizeEditReplacement(entry);
@@ -137,7 +138,10 @@ function normalizeEditReplacements(record: Record<string, unknown>) {
       }
     }
   }
-  if (typeof record.oldText === "string" && record.oldText.trim().length > 0) {
+  // Only append top-level oldText/newText when there was no edits[] array.
+  // When edits[] exists, the top-level values were hoisted from edits[0]
+  // and appending them would create a duplicate entry.
+  if (!hadEditsArray && typeof record.oldText === "string" && record.oldText.trim().length > 0) {
     if (typeof record.newText === "string") {
       replacements.push({
         oldText: record.oldText,

@@ -87,4 +87,32 @@ describe("normalizeToolParams — edits[] array hoisting", () => {
       assertRequiredParams(normalized, CLAUDE_PARAM_GROUPS.edit, "edit");
     }).toThrow(/Missing required/);
   });
+
+  it("preserves all entries in a multi-edit edits[] payload", () => {
+    const params = {
+      path: "batch.txt",
+      edits: [
+        { oldText: "alpha", newText: "ALPHA" },
+        { oldText: "delta", newText: "DELTA" },
+      ],
+    };
+    const normalized = normalizeToolParams(params);
+    expect(normalized).toBeDefined();
+    expect(normalized!.edits).toHaveLength(2);
+    const edits = normalized!.edits as Array<{ oldText: string; newText: string }>;
+    expect(edits[0]).toEqual({ oldText: "alpha", newText: "ALPHA" });
+    expect(edits[1]).toEqual({ oldText: "delta", newText: "DELTA" });
+  });
+
+  it("does not produce duplicate edits for a single-entry edits[] payload", () => {
+    const params = {
+      file: "test.ts",
+      edits: [{ oldText: "hello", newText: "world" }],
+    };
+    const normalized = normalizeToolParams(params);
+    expect(normalized).toBeDefined();
+    expect(normalized!.edits).toHaveLength(1);
+    const edits = normalized!.edits as Array<{ oldText: string; newText: string }>;
+    expect(edits[0]).toEqual({ oldText: "hello", newText: "world" });
+  });
 });
