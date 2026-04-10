@@ -133,6 +133,14 @@ function normalizeResolvedModel(params: {
   agentDir?: string;
   runtimeHooks?: ProviderRuntimeHooks;
 }): Model<Api> {
+  if (!params.model) {
+    return {
+      id: "unknown",
+      name: "unknown",
+      api: "openai-chat" as Api,
+      input: ["text"],
+    } as Model<Api>;
+  }
   const normalizedInputModel = {
     ...params.model,
     input: resolveProviderModelInput({
