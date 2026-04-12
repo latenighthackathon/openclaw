@@ -127,7 +127,10 @@ function normalizeEditReplacement(value: unknown): EditReplacement | undefined {
   };
 }
 
-function normalizeEditReplacements(record: Record<string, unknown>) {
+function normalizeEditReplacements(
+  record: Record<string, unknown>,
+  opts: { editHoistedFromArray?: boolean } = {},
+) {
   const replacements: EditReplacement[] = [];
   if (Array.isArray(record.edits)) {
     for (const entry of record.edits) {
@@ -142,8 +145,7 @@ function normalizeEditReplacements(record: Record<string, unknown>) {
   //  - the top-level pair was user-provided (not hoisted from edits[0])
   // Skip when the top-level values were hoisted from edits[0] and edits[]
   // already produced valid entries — appending would create a duplicate.
-  const hoisted = Boolean(record._editHoistedFromArray);
-  const skipTopLevel = hoisted && replacements.length > 0;
+  const skipTopLevel = opts.editHoistedFromArray && replacements.length > 0;
   if (
     !skipTopLevel &&
     typeof record.oldText === "string" &&
@@ -156,7 +158,6 @@ function normalizeEditReplacements(record: Record<string, unknown>) {
       });
     }
   }
-  delete record._editHoistedFromArray;
   if (replacements.length > 0) {
     record.edits = replacements;
   }
@@ -249,18 +250,13 @@ export function normalizeToolParams(params: unknown): Record<string, unknown> | 
     // from edits[0]) are converted to canonical keys (oldText/newText).
     normalizeClaudeParamAliases(normalized);
   }
-  // Mark whether the top-level edit pair was user-provided or hoisted
-  // from edits[0]. normalizeEditReplacements uses this to avoid
-  // duplicating hoisted values while still honoring user-provided ones.
-  if (!hadTopLevelOldText && "oldText" in normalized) {
-    normalized._editHoistedFromArray = true;
-  }
+  const editHoistedFromArray = !hadTopLevelOldText && "oldText" in normalized;
   // Some providers/models emit text payloads as structured blocks instead of raw strings.
   // Normalize these for write/edit so content matching and writes stay deterministic.
   normalizeTextLikeParam(normalized, "content");
   normalizeTextLikeParam(normalized, "oldText");
   normalizeTextLikeParam(normalized, "newText");
-  normalizeEditReplacements(normalized);
+  normalizeEditReplacements(normalized, { editHoistedFromArray });
   return normalized;
 }
 
